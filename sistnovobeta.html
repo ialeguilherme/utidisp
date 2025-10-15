@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gerenciamento de Plantão - UTI</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --dark-color: #34495e;
+            --text-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 0;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background-color: var(--dark-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: white;
+            text-align: center;
+            flex: 1;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: var(--secondary-color);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap; 
+        }
+        
+        .card-header .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .leitos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .leito-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .leito-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .leito-card.isolamento {
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .leito-card.ocupado {
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .leito-card.vago {
+            border-left: 5px solid var(--success-color);
+        }
+
+        .leito-numero {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .leito-isolamento {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .leito-paciente {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .leito-diagnostico {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .leito-dispositivos {
+            margin-top: 10px;
+        }
+
+        .dispositivo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        
+        .dispositivo strong {
+            font-weight: 600;
+        }
+
+        .dispositivo.vencido {
+            background-color: #ffeaea;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+
+        .dispositivo.proximo {
+            background-color: #fff3cd;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-top: 5px;
+        }
+        
+        .card-header .btn-group .btn {
+            margin-top: 0;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-info {
+            background-color: #1abc9c;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: #16a085;
+        }
+        
+        .btn-secondary {
+            background-color: var(--dark-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2c3e50;
+        }
+        
+        .btn-dark {
+            background-color: #495057;
+            color: white;
+        }
+        
+        .btn-dark:hover {
+            background-color: #343a34;
+        }
+
+
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        #relatorio-modal .modal-content, #visualizar-paciente-modal .modal-content {
+            max-width: 800px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: var(--accent-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .form-check-input {
+            margin-right: 10px;
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+        }
+
+        .checklist-item.checked {
+            background-color: #e8f5e9;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-pendente {
+            background-color: var(--warning-color);
+        }
+
+        .status-concluido {
+            background-color: var(--success-color);
+        }
+
+        .status-atrasado {
+            background-color: var(--accent-color);
+        }
+
+        .dispositivos-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .dispositivos-table th, .dispositivos-table td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        
+        #quadro-geral-tbody td:nth-child(1), #quadro-geral-tbody td:nth-child(2),
+        #quadro-geral-header th:nth-child(1), #quadro-geral-header th:nth-child(2) {
+             text-align: left;
+             min-width: 80px;
+             white-space: nowrap;
+        }
+        
+        .dispositivos-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary-color);
+            white-space: nowrap;
+        }
+
+        .dispositivos-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .badge-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .badge-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .badge-dark {
+            background-color: var(--dark-color);
+            color: white;
+        }
+
+        .device-management-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+        }
+        
+        .device-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .device-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .device-item input[type="date"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .comment-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .comment-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .comment-item {
+            background-color: #f9f9f9;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 3px solid var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .comment-date {
+            font-size: 0.75rem;
+            color: #777;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .report-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
+        
+        .report-section h3 {
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .report-patient-title {
+            font-weight: 700;
+            margin-top: 20px;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+        
+        .custom-device-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        .custom-device-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .custom-device-list li:last-child {
+            border-bottom: none;
+        }
+
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+
+        /* Estilos para impressão (Relatório) */
+        @media print {
+            body {
+                background-color: white;
+                font-size: 11pt;
+            }
+            header, .nav-tabs, .btn, .close, footer, .modal-content > button:last-child, .header-print-hide {
+                display: none !important;
+            }
+            .container {
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+            }
+            .modal {
+                position: relative;
+                display: block;
+                width: 100%;
+                height: auto;
+                background: none;
+            }
+            .modal-content {
+                box-shadow: none;
+                max-width: 100%;
+                width: 100%;
+                max-height: none;
+                overflow: visible;
+                padding: 0;
+                border: none;
+            }
+            .report-section {
+                border: 1px solid #ccc;
+                page-break-inside: avoid;
+                margin-top: 20px;
+                padding: 15px;
+                border-radius: 0;
+                background-color: white;
+            }
+            .dispositivos-table, .dispositivos-table th, .dispositivos-table td {
+                border: 1px solid #ccc !important;
+                font-size: 0.9rem;
+            }
+            .dispositivos-table {
+                width: 100%;
+                display: table;
+            }
+            .dispositivos-table tbody {
+                display: table-row-group;
+            }
+            .report-section ul {
+                list-style-type: disc !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Sistema de Gerenciamento - UTI</h1>
+                </div>
+                <div class="user-info">
+                    <span id="current-date"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="leitos">Leitos e Pacientes</div>
+            <div class="tab" data-tab="checklist-diario">Checklist Diário</div>
+            <div class="tab" data-tab="checklist-pacientes">Checklist por Paciente</div>
+        </div>
+
+        <div id="leitos" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Leitos da UTI</div>
+                    <div class="btn-group">
+                        <button class="btn btn-info" id="gerar-relatorio-btn">Gerar Round (Relatório)</button>
+                        
+                        <button class="btn btn-dark" id="exportar-dados-btn">Exportar Dados</button>
+                        <input type="file" id="importar-dados-input" style="display: none;" accept=".json">
+                        <button class="btn btn-dark" id="importar-dados-btn">Importar Dados</button>
+                        
+                        </div>
+                </div>
+                <div class="leitos-grid" id="leitos-grid">
+                    </div>
+            </div>
+            
+             <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Quadro Geral de Dispositivos (Todos os Pacientes)</div>
+                </div>
+                <table class="dispositivos-table">
+                    <thead>
+                        <tr id="quadro-geral-header">
+                            <th>Leito</th>
+                            <th>Paciente</th>
+                            </tr>
+                    </thead>
+                    <tbody id="quadro-geral-tbody">
+                        </tbody>
+                </table>
+            </div>
+
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Dispositivos Próximos do Vencimento/Vencidos</div>
+                </div>
+                <table class="dispositivos-table">
+                    <thead>
+                        <tr>
+                            <th>Leito</th>
+                            <th>Paciente</th>
+                            <th>Dispositivo</th>
+                            <th>Data de Inserção</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dispositivos-tbody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="checklist-diario" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Checklist Diário</div>
+                    <button class="btn btn-success" id="salvar-checklist-diario">Salvar Checklist</button>
+                </div>
+                <div class="checklist-grid" id="checklist-diario-content">
+                    <div class="checklist-section">
+                        <h3>Verificações Gerais</h3>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-carrinho1">
+                            <label for="check-carrinho1">Check Carrinho 1</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-carrinho2">
+                            <label for="check-carrinho2">Check Carrinho 2</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-livro-ocorrencias">
+                            <label for="check-livro-ocorrencias">Abrir Livro de Ocorrências</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-psicotropicos">
+                            <label for="check-psicotropicos">Checar Psicotrópicos</label>
+                        </div>
+                    </div>
+
+                    <div class="checklist-section">
+                        <h3>Verificações de Geladeira</h3>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-geladeira-8h">
+                            <label for="check-geladeira-8h">Checar Geladeira (8h)</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-geladeira-18h">
+                            <label for="check-geladeira-18h">Checar Geladeira (18h)</label>
+                        </div>
+                    </div>
+
+                    <div class="checklist-section">
+                        <h3>Pedido da Farmácia</h3>
+                        <div class="checklist-item" id="pedido-farmacia-item">
+                            <input type="checkbox" id="check-pedido-farmacia">
+                            <label for="check-pedido-farmacia" id="pedido-farmacia-label">Pedido da Farmácia</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="checklist-pacientes" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Checklist por Paciente</div>
+                </div>
+                <div id="checklist-pacientes-container">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="paciente-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">Adicionar Paciente</div>
+                <span class="close" data-modal="paciente-modal">&times;</span>
+            </div>
+            <form id="paciente-form">
+                <input type="hidden" id="leito-id">
+                
+                <div class="form-group">
+                    <label class="form-label" for="nome-paciente">Nome do Paciente</label>
+                    <input type="text" class="form-control" id="nome-paciente" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="diagnostico">Diagnóstico</label>
+                    <input type="text" class="form-control" id="diagnostico" required>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="tem-lpp">
+                        <label class="form-label" for="tem-lpp">Tem Lesão por Pressão (LPP)?</label>
+                    </div>
+                    <input type="text" class="form-control" id="especificacao-lpp" placeholder="Especificação LPP" style="display: none;">
+                </div>
+                
+                <div class="device-management-section">
+                    <label class="form-label">Dispositivos do Paciente (Selecione/Data de Inserção)</label>
+                    <div id="device-inputs-container">
+                        </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="visualizar-paciente-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="visualizar-paciente-modal-title">Visualizar Paciente</div>
+                <span class="close" data-modal="visualizar-paciente-modal">&times;</span>
+            </div>
+            <div id="paciente-detalhes">
+                </div>
+            
+            <div class="comment-section">
+                <h3>Comentários</h3>
+                <div class="comment-list" id="comment-list">
+                    </div>
+                <textarea class="form-control" id="novo-comentario" rows="3" placeholder="Adicionar novo comentário..."></textarea>
+                <button class="btn btn-primary" id="adicionar-comentario-btn" style="width: 100%; margin-top: 10px;">Adicionar Comentário</button>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="fecharModal('visualizar-paciente-modal')" style="width: 100%; margin-top: 20px;">Fechar</button>
+        </div>
+    </div>
+    
+    <div id="relatorio-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header header-print-hide">
+                <div class="modal-title" id="relatorio-modal-title">Relatório de Plantão (Round) - UTI</div>
+                <span class="close" data-modal="relatorio-modal">&times;</span>
+            </div>
+            <div id="relatorio-conteudo">
+                </div>
+            <button class="btn btn-primary header-print-hide" onclick="window.print()" style="width: 100%; margin-top: 20px;">Imprimir/Gerar PDF</button>
+        </div>
+    </div>
+
+
+    <footer>
+        <div class="container">
+            <p>Sistema de Gerenciamento de Plantão em UTI &copy; 2023</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dispositivos rastreados (TODOS AGORA PRECISAM DE DATA)
+        const DISPOSITIVOS_RASTREADOS = ['TOT', 'TQT', 'SNE', 'SVD', 'CVP', 'CVC', 'VMI', 'CHD'];
+        // Dispositivos que precisam de data de inserção e têm prazo de controle (apenas estes controlam vencimento)
+        const DISPOSITIVOS_DE_PRAZO = ['CVC', 'CVP', 'CHD', 'SVD']; 
+        
+        let DISPOSITIVOS_CUSTOM = [];
+        
+        // NOVO CHECKLIST SIMPLIFICADO POR PACIENTE
+        const CHECKLIST_ITEMS = [
+            { key: 'identificacao', label: 'Identificação do Paciente (Nome/Pulseira)', section: 'Cuidados Essenciais' },
+            { key: 'decubito', label: 'Mudança de Decúbito Realizada', section: 'Cuidados Essenciais' },
+            { key: 'cabecEelevada', label: 'Cabeceira Elevada (>30 graus)', section: 'Cuidados Essenciais' },
+            { key: 'higieneOral', label: 'Higienização Oral com Clorexidina', section: 'Higiene' },
+            { key: 'banho', label: 'Banho no Leito Realizado', section: 'Higiene' },
+            { key: 'lavagemCabelos', label: 'Lavagem de Cabelos', section: 'Higiene' },
+        ];
+
+
+        function getDispositivosPadrao() {
+            const allDevices = [...DISPOSITIVOS_RASTREADOS, ...DISPOSITIVOS_CUSTOM];
+            return [...new Set(allDevices)];
+        }
+
+
+        // Dados iniciais
+        let leitos = [
+            { id: 1, paciente: null, tipo: 'normal' },
+            { id: 2, paciente: null, tipo: 'normal' },
+            { id: 3, paciente: null, tipo: 'normal' },
+            { id: 4, paciente: null, tipo: 'normal' },
+            { id: 5, paciente: null, tipo: 'normal' },
+            { id: 6, paciente: null, tipo: 'normal' },
+            { id: 7, paciente: null, tipo: 'normal' },
+            { id: 8, paciente: null, tipo: 'normal' },
+            { id: 9, paciente: null, tipo: 'normal' },
+            { id: 10, paciente: null, tipo: 'isolamento' }
+        ];
+
+        let checklistDiario = {
+            carrinho1: false,
+            carrinho2: false,
+            geladeira8h: false,
+            geladeira18h: false,
+            livroOcorrencias: false,
+            psicotropicos: false,
+            pedidoFarmacia: false
+        };
+
+        // Carregar dados do localStorage se existirem
+        function carregarDados() {
+            const leitosSalvos = localStorage.getItem('leitosUTI');
+            const checklistSalvo = localStorage.getItem('checklistDiarioUTI');
+            const customDevicesSalvos = localStorage.getItem('dispositivosCustomUTI');
+
+            if (customDevicesSalvos) {
+                DISPOSITIVOS_CUSTOM = JSON.parse(customDevicesSalvos);
+            }
+
+            if (leitosSalvos) {
+                const leitosCarregados = JSON.parse(leitosSalvos);
+                const todosDispositivos = getDispositivosPadrao();
+
+                leitos = leitos.map(leitoPadrao => {
+                    const leitoSalvo = leitosCarregados.find(l => l.id === leitoPadrao.id);
+                    if (leitoSalvo && leitoSalvo.paciente) {
+                        
+                        leitoSalvo.paciente.dispositivos = leitoSalvo.paciente.dispositivos || {};
+                        leitoSalvo.paciente.comentarios = leitoSalvo.paciente.comentarios || [];
+                        leitoSalvo.paciente.checklist = leitoSalvo.paciente.checklist || {};
+
+                        // Garante que TODOS os dispositivos, incluindo customizados, estejam na estrutura
+                        todosDispositivos.forEach(dev => {
+                            if (!leitoSalvo.paciente.dispositivos[dev]) {
+                                leitoSalvo.paciente.dispositivos[dev] = { 
+                                    presente: false, 
+                                    dataInsercao: null, 
+                                    limpezas: [] 
+                                };
+                            } else {
+                                leitoSalvo.paciente.dispositivos[dev].limpezas = leitoSalvo.paciente.dispositivos[dev].limpezas || [];
+                                
+                                // Adaptação: Garante que dispositivos marcados como presentes, mas sem data (estrutura antiga), sejam corrigidos
+                                const devData = leitoSalvo.paciente.dispositivos[dev];
+                                if (devData.presente && !devData.dataInsercao) {
+                                    // Marca como não presente para forçar o usuário a re-inserir com data
+                                    devData.presente = false; 
+                                }
+                            }
+                        });
+                        
+                        // Limpa dispositivos que podem ter sido removidos da lista padrão
+                        Object.keys(leitoSalvo.paciente.dispositivos).forEach(dev => {
+                            if (!getDispositivosPadrao().includes(dev)) {
+                                delete leitoSalvo.paciente.dispositivos[dev];
+                            }
+                        });
+                        
+                        // Atualiza/Inicializa o novo checklist
+                        const newChecklist = {};
+                        CHECKLIST_ITEMS.forEach(item => {
+                            newChecklist[item.key] = leitoSalvo.paciente.checklist[item.key] || false;
+                        });
+                        leitoSalvo.paciente.checklist = newChecklist;
+                        
+                        return leitoSalvo;
+                    }
+                    return leitoPadrao;
+                });
+            }
+            
+            if (checklistSalvo) {
+                checklistDiario = JSON.parse(checklistSalvo);
+                atualizarChecklistDiario();
+            }
+        }
+
+        // Salvar dados no localStorage
+        function salvarDados() {
+            localStorage.setItem('leitosUTI', JSON.stringify(leitos));
+            localStorage.setItem('checklistDiarioUTI', JSON.stringify(checklistDiario));
+            localStorage.setItem('dispositivosCustomUTI', JSON.stringify(DISPOSITIVOS_CUSTOM));
+        }
+
+        // --- Funções de Data e Hora ---
+
+        function formatarData(data, includeTime = false) {
+            if (!data) return 'N/A';
+            let date;
+            
+            // Tenta criar um objeto Date. Adiciona 'T00:00:00' para datas YYYY-MM-DD para evitar problemas de fuso
+            if (typeof data === 'string' && data.length === 10) {
+                 date = new Date(data + 'T00:00:00');
+            } else {
+                 date = new Date(data);
+            }
+
+            if (isNaN(date)) return 'Data Inválida'; 
+
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            if (includeTime) {
+                options.hour = '2-digit';
+                options.minute = '2-digit';
+                options.hour12 = false;
+            }
+            
+            // Para datas sem hora (apenas dia, mês, ano)
+            if (typeof data === 'string' && data.length === 10 && !includeTime) {
+                 const parts = data.split('-');
+                 // Usa apenas o formato DD/MM/YYYY
+                 return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+
+            return date.toLocaleString('pt-BR', options);
+        }
+
+        function calcularDiferencaDias(data) {
+            const dataInsercao = new Date(data + 'T00:00:00'); 
+            const hoje = new Date(new Date().toDateString());
+            dataInsercao.setHours(0, 0, 0, 0); 
+            hoje.setHours(0, 0, 0, 0);
+            return Math.floor((hoje - dataInsercao) / (1000 * 60 * 60 * 24));
+        }
+        
+        function calcularDiferencaHoras(data) {
+            const dataInsercao = new Date(data);
+            const hoje = new Date();
+            return Math.floor((hoje - dataInsercao) / (1000 * 60 * 60));
+        }
+
+        // Define o status do dispositivo
+        function getStatusDispositivo(dispositivo, data) {
+            if (!data) return { status: 'Data Ausente', badge: 'badge-dark', diferenca: 'N/A', isUrgent: true, days: 0 }; 
+            
+            let diferenca, limite;
+            let status = 'Em Uso';
+            let badgeClass = 'badge-success';
+            const isPrazoDevice = DISPOSITIVOS_DE_PRAZO.includes(dispositivo);
+            let isUrgent = false;
+
+            if (!isPrazoDevice) {
+                diferenca = calcularDiferencaDias(data);
+                return { 
+                    status: 'Instalado', 
+                    badge: 'badge-dark', 
+                    diferenca: `${diferenca} dias`, 
+                    isUrgent: false,
+                    days: diferenca
+                };
+            }
+
+            if (dispositivo === 'CVC' || dispositivo === 'CHD' || dispositivo === 'SVD') {
+                diferenca = calcularDiferencaDias(data);
+                limite = 7; 
+                
+                if (diferenca >= limite) {
+                    status = 'VENCIDO';
+                    badgeClass = 'badge-danger';
+                    isUrgent = true;
+                } else if (diferenca >= limite - 2) { 
+                    status = 'PRÓXIMO VENCIMENTO';
+                    badgeClass = 'badge-warning';
+                    isUrgent = true;
+                }
+
+            } else if (dispositivo === 'CVP') { 
+                diferenca = calcularDiferencaHoras(data);
+                limite = 72;
+                
+                if (diferenca >= limite) {
+                    status = 'VENCIDO';
+                    badgeClass = 'badge-danger';
+                    isUrgent = true;
+                } else if (diferenca >= limite - 12) {
+                    status = 'PRÓXIMO VENCIMENTO';
+                    badgeClass = 'badge-warning';
+                    isUrgent = true;
+                }
+            }
+            
+            const diffText = (dispositivo === 'CVP') ? `${diferenca}h` : `${diferenca} dias`;
+
+            return { status, badge: badgeClass, diferenca: diffText, isUrgent, days: (dispositivo === 'CVP' ? diferenca/24 : diferenca) };
+        } 
+
+        // --- Funções de Modal ---
+
+        function abrirModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function fecharModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        // --- Funções de Navegação de Abas (NOVO: Adicionado para o fix) ---
+        function setupTabListeners() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+
+                    // Remove 'active' from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                    // Add 'active' to the clicked tab and its content
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Garante que o conteúdo do checklist seja renderizado ao abrir a aba
+                    if (tabId === 'checklist-pacientes') {
+                        renderizarChecklistsPacientes();
+                    }
+                });
+            });
+        }
+
+
+        // --- Funções de Renderização Principal ---
+
+        function atualizarData() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', options);
+        }
+
+        function renderizarLeitos() {
+            const leitosGrid = document.getElementById('leitos-grid');
+            leitosGrid.innerHTML = '';
+
+            leitos.forEach(leito => {
+                const leitoCard = document.createElement('div');
+                leitoCard.className = `leito-card ${leito.tipo === 'isolamento' ? 'isolamento' : (leito.paciente ? 'ocupado' : 'vago')}`;
+
+                let leitoHTML = `
+                    <div class="leito-numero">Leito ${leito.id} ${leito.tipo === 'isolamento' ? '<span class="leito-isolamento">Isolamento</span>' : ''}</div>
+                `;
+
+                if (leito.paciente) {
+                    leitoHTML += `
+                        <div class="leito-paciente">${leito.paciente.nome}</div>
+                        <div class="leito-diagnostico">${leito.paciente.diagnostico}</div>
+                    `;
+
+                    if (leito.paciente.temLpp) {
+                        leitoHTML += `<div><strong>LPP:</strong> ${leito.paciente.especificacaoLpp}</div>`;
+                    }
+
+                    // Listar dispositivos com data de inserção e prazo próximo/vencido (apenas urgentes para manter o card limpo)
+                    leitoHTML += `<div class="leito-dispositivos">`;
+                    getDispositivosPadrao().forEach(dev => {
+                        const devData = leito.paciente.dispositivos[dev];
+                        if (devData && devData.presente && devData.dataInsercao) {
+                            const { status, diferenca, isUrgent } = getStatusDispositivo(dev, devData.dataInsercao);
+                            if (isUrgent) {
+                                leitoHTML += `
+                                    <div class="dispositivo ${status.includes('VENCIDO') ? 'vencido' : 'proximo'}">
+                                        <span>${dev}: ${formatarData(devData.dataInsercao)}</span>
+                                        <span>${diferenca}</span>
+                                    </div>
+                                `;
+                            }
+                        }
+                    });
+                    leitoHTML += `</div>`;
+                    
+                    leitoHTML += `
+                        <button class="btn btn-primary editar-paciente" data-leito="${leito.id}" style="margin-top: 10px; width: 100%;">Editar Paciente</button>
+                        <button class="btn btn-info visualizar-paciente" data-leito="${leito.id}" style="margin-top: 5px; width: 100%;">Visualizar Paciente</button>
+                        <button class="btn btn-danger remover-paciente" data-leito="${leito.id}" style="margin-top: 5px; width: 100%;">Remover</button>
+                    `;
+                } else {
+                    leitoHTML += `
+                        <div style="text-align: center; padding: 20px 0;">
+                            <p>Leito vago</p>
+                            <button class="btn btn-primary adicionar-paciente" data-leito="${leito.id}" style="margin-top: 10px;">Adicionar Paciente</button>
+                        </div>
+                    `;
+                }
+
+                leitoCard.innerHTML = leitoHTML;
+                leitosGrid.appendChild(leitoCard);
+            });
+
+            // CORREÇÃO DE BUG: Chamada direta à função correta
+            document.querySelectorAll('.adicionar-paciente').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    abrirModalPaciente(parseInt(this.getAttribute('data-leito')), false); 
+                });
+            });
+            
+            document.querySelectorAll('.editar-paciente').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    abrirModalPaciente(parseInt(this.getAttribute('data-leito')), true);
+                });
+            });
+            
+            document.querySelectorAll('.visualizar-paciente').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    abrirModalVisualizarPaciente(parseInt(this.getAttribute('data-leito')));
+                });
+            });
+            
+            document.querySelectorAll('.remover-paciente').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const leitoId = parseInt(this.getAttribute('data-leito'));
+                    if (confirm(`Tem certeza que deseja remover o paciente do Leito ${leitoId}?`)) {
+                        removerPaciente(leitoId);
+                    }
+                });
+            });
+
+            atualizarTabelaDispositivos(false);
+            renderizarQuadroGeralDispositivos();
+        }
+
+        // Renderizar o quadro geral de pacientes por dispositivo
+        function renderizarQuadroGeralDispositivos() {
+            const todosDispositivos = getDispositivosPadrao();
+            const thead = document.getElementById('quadro-geral-header');
+            const tbody = document.getElementById('quadro-geral-tbody');
+
+            // 1. Renderizar cabeçalho (Dispositivos como colunas)
+            thead.innerHTML = '<th>Leito</th><th>Paciente</th>' + todosDispositivos.map(dev => `<th>${dev}</th>`).join('');
+
+            // 2. Renderizar corpo (Pacientes como linhas)
+            tbody.innerHTML = '';
+            leitos.forEach(leito => {
+                if (leito.paciente) {
+                    let rowHtml = `
+                        <tr> 
+                            <td>${leito.id}</td> 
+                            <td style="text-align: left; font-weight: 600;">${leito.paciente.nome}</td>
+                    `;
+                    todosDispositivos.forEach(dev => {
+                        const devData = leito.paciente.dispositivos[dev];
+                        const isPresent = devData && devData.presente;
+                        let displayContent = '-';
+
+                        if (isPresent) {
+                            if (devData.dataInsercao) {
+                                const dataFormatada = formatarData(devData.dataInsercao);
+                                const { status, badge } = getStatusDispositivo(dev, devData.dataInsercao);
+                                
+                                displayContent = `<span class="badge ${badge}" title="${status} / ${dataFormatada}">${dataFormatada}</span>`;
+                            } else {
+                                // Caso em que está marcado como presente, mas a data foi perdida ou não inserida (deve ser corrigido na edição)
+                                displayContent = `<span class="badge badge-danger">SEM DATA</span>`; 
+                            }
+                        }
+
+                        rowHtml += `<td>${displayContent}</td>`;
+                    });
+                    rowHtml += '</tr>';
+                    tbody.innerHTML += rowHtml;
+                }
+            });
+        }
+
+
+        // Atualizar tabela de dispositivos (Aba Leitos - Prazos e Relatório)
+        function atualizarTabelaDispositivos(forReport) {
+            const tbodyId = forReport ? 'relatorio-dispositivos-tbody-content' : 'dispositivos-tbody';
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            // Filtra e organiza os dispositivos que são urgentes ou todos (para o relatório)
+            let dispositivosRisco = [];
+            leitos.forEach(leito => {
+                if (leito.paciente) {
+                    DISPOSITIVOS_DE_PRAZO.forEach(dev => {
+                        const devData = leito.paciente.dispositivos[dev];
+                        if (devData && devData.presente && devData.dataInsercao) {
+                            const statusInfo = getStatusDispositivo(dev, devData.dataInsercao);
+                            
+                            if (forReport || statusInfo.isUrgent) {
+                                dispositivosRisco.push({
+                                    leitoId: leito.id,
+                                    pacienteNome: leito.paciente.nome,
+                                    isIsolamento: leito.tipo === 'isolamento',
+                                    dispositivo: dev,
+                                    data: devData.dataInsercao,
+                                    ...statusInfo
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Ordena (VENCIDO > PRÓXIMO VENCIMENTO > Data Inserção)
+            dispositivosRisco.sort((a, b) => {
+                const aUrgency = a.status === 'VENCIDO' ? 3 : (a.status === 'PRÓXIMO VENCIMENTO' ? 2 : (a.isUrgent ? 1 : 0));
+                const bUrgency = b.status === 'VENCIDO' ? 3 : (b.status === 'PRÓXIMO VENCIMENTO' ? 2 : (b.isUrgent ? 1 : 0));
+                
+                if (aUrgency !== bUrgency) {
+                    return bUrgency - aUrgency; // Mais urgente primeiro
+                }
+                return a.leitoId - b.leitoId; // Em seguida, por número do leito
+            });
+            
+            dispositivosRisco.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.leitoId} ${item.isIsolamento ? '(Isolamento)' : ''}</td>
+                    <td>${item.pacienteNome}</td>
+                    <td>${item.dispositivo}</td>
+                    <td>${formatarData(item.data)}</td>
+                    <td><span class="badge ${item.badge}">${item.status} (${item.diferenca})</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Abrir modal para adicionar/editar paciente
+        function abrirModalPaciente(leitoId, forcarEdicao = false) {
+            const modal = document.getElementById('paciente-modal');
+            const form = document.getElementById('paciente-form');
+            const titulo = document.getElementById('modal-title');
+            const leitoIdInput = document.getElementById('leito-id');
+            const deviceInputsContainer = document.getElementById('device-inputs-container');
+            
+            leitoIdInput.value = leitoId;
+            deviceInputsContainer.innerHTML = '';
+
+            const leito = leitos.find(l => l.id === leitoId);
+            const todosDispositivos = getDispositivosPadrao();
+
+            let modoEdicao = forcarEdicao || leito.paciente;
+
+            if (modoEdicao) {
+                titulo.textContent = `Editar Paciente - Leito ${leitoId}`;
+                const paciente = leito.paciente;
+                document.getElementById('nome-paciente').value = paciente.nome;
+                document.getElementById('diagnostico').value = paciente.diagnostico;
+                document.getElementById('tem-lpp').checked = paciente.temLpp;
+                document.getElementById('especificacao-lpp').value = paciente.especificacaoLpp || '';
+                document.getElementById('especificacao-lpp').style.display = paciente.temLpp ? 'block' : 'none';
+
+                // Preencher inputs dos dispositivos
+                todosDispositivos.forEach(dev => {
+                    const devData = paciente.dispositivos[dev] || { presente: false, dataInsercao: null };
+                    const isChecked = devData.presente;
+                    // Garantir que a data seja formatada como YYYY-MM-DD
+                    const dataInsercao = devData.dataInsercao ? String(devData.dataInsercao).substring(0, 10) : ''; 
+                    
+                    const dateStyle = isChecked ? '' : 'display: none;';
+                    
+                    deviceInputsContainer.innerHTML += `
+                        <div class="device-item">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="dev-check-${dev}" data-device="${dev}" ${isChecked ? 'checked' : ''}>
+                                <label class="form-label" for="dev-check-${dev}">${dev}</label>
+                            </div>
+                            <input type="date" class="form-control-date" id="dev-date-${dev}" data-device-date="${dev}" value="${dataInsercao}" style="width: auto; ${dateStyle}">
+                        </div>
+                    `;
+                });
+            } else {
+                titulo.textContent = `Adicionar Paciente - Leito ${leitoId}`;
+                form.reset();
+                document.getElementById('especificacao-lpp').style.display = 'none';
+
+                // Inicializar inputs dos dispositivos para paciente novo
+                todosDispositivos.forEach(dev => {
+                    deviceInputsContainer.innerHTML += `
+                        <div class="device-item">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="dev-check-${dev}" data-device="${dev}">
+                                <label class="form-label" for="dev-check-${dev}">${dev}</label>
+                            </div>
+                            <input type="date" class="form-control-date" id="dev-date-${dev}" data-device-date="${dev}" style="width: auto; display: none;">
+                        </div>
+                    `;
+                });
+            }
+
+            // Adicionar listeners para campos de data de dispositivos (MOSTRA/ESCONDE DATA)
+            deviceInputsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const dev = this.getAttribute('data-device');
+                    const dateInput = document.getElementById(`dev-date-${dev}`);
+                    
+                    if (dateInput) {
+                        if (this.checked) {
+                            dateInput.style.display = 'block';
+                            if (!dateInput.value) {
+                                // Preenche automaticamente com a data de hoje se estiver vazio
+                                dateInput.value = new Date().toISOString().substring(0, 10);
+                            }
+                        } else {
+                            dateInput.style.display = 'none';
+                            dateInput.value = ''; // Limpa a data quando desmarca
+                        }
+                    }
+                });
+            });
+
+            abrirModal('paciente-modal');
+        }
+
+
+        // Salvar paciente (agora com data obrigatória)
+        function salvarPaciente(event) {
+            event.preventDefault();
+            const leitoId = parseInt(document.getElementById('leito-id').value);
+            const nome = document.getElementById('nome-paciente').value;
+            const diagnostico = document.getElementById('diagnostico').value;
+            const temLpp = document.getElementById('tem-lpp').checked;
+            const especificacaoLpp = document.getElementById('especificacao-lpp').value;
+
+            const leitoIndex = leitos.findIndex(l => l.id === leitoId);
+            const pacienteExistente = leitos[leitoIndex].paciente;
+            const todosDispositivos = getDispositivosPadrao();
+
+            let dispositivos = pacienteExistente ? pacienteExistente.dispositivos : {};
+            let checklist = pacienteExistente ? pacienteExistente.checklist : {};
+            let hasError = false;
+
+            // 1. Process devices
+            for (const dev of todosDispositivos) {
+                const isPresent = document.getElementById(`dev-check-${dev}`).checked;
+                const dateInput = document.getElementById(`dev-date-${dev}`);
+                let dataInsercao = dateInput ? dateInput.value : null;
+
+                if (!dispositivos[dev]) {
+                    dispositivos[dev] = { presente: false, dataInsercao: null, limpezas: [] };
+                }
+                
+                if (isPresent) {
+                     // Check for required date when present
+                     if (!dataInsercao) {
+                         alert(`Atenção: O dispositivo ${dev} está presente, mas a Data de Inserção está vazia. Por favor, insira a data.`);
+                         hasError = true;
+                         break; // Sai do loop para não sobrepor o erro
+                     }
+                     // Se o dispositivo for CVP, a data precisa incluir o tempo para o cálculo de 72h (será a data de hoje, hora atual)
+                     if (dev === 'CVP') {
+                        // Se a data de inserção mudou, ou se é nova, salva a data e hora atuais. 
+                        const isNewDate = !pacienteExistente || (dispositivos[dev].dataInsercao && dispositivos[dev].dataInsercao.substring(0, 10) !== dataInsercao);
+                         if (!pacienteExistente || isNewDate) {
+                              // Se for o CVP, a data de inserção é a data de hoje e HORA ATUAL. 
+                             dispositivos[dev].dataInsercao = new Date().toISOString(); 
+                         }
+                     } else {
+                          // Para todos os outros, apenas a data (YYYY-MM-DD)
+                         dispositivos[dev].dataInsercao = dataInsercao;
+                     }
+                     
+                     dispositivos[dev].presente = true;
+
+                } else {
+                     dispositivos[dev].presente = false;
+                     dispositivos[dev].dataInsercao = null;
+                }
+
+                dispositivos[dev].limpezas = dispositivos[dev].limpezas || [];
+            }
+            
+            if (hasError) return;
+
+            const novoPaciente = {
+                nome: nome,
+                diagnostico: diagnostico,
+                temLpp: temLpp,
+                especificacaoLpp: temLpp ? especificacaoLpp : null,
+                dispositivos: dispositivos,
+                comentarios: pacienteExistente ? pacienteExistente.comentarios : [],
+                checklist: checklist
+            };
+
+            leitos[leitoIndex].paciente = novoPaciente;
+            salvarDados();
+            fecharModal('paciente-modal');
+            renderizarLeitos();
+            renderizarChecklistsPacientes();
+        }
+
+        function removerPaciente(leitoId) {
+            const leitoIndex = leitos.findIndex(l => l.id === leitoId);
+            leitos[leitoIndex].paciente = null;
+            salvarDados();
+            renderizarLeitos();
+            renderizarChecklistsPacientes();
+        }
+        
+        // --- Funções do Checklist ---
+        
+        function atualizarChecklistDiario() {
+            Object.keys(checklistDiario).forEach(key => {
+                const id = `check-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+                const checkbox = document.getElementById(id);
+                if (checkbox) {
+                    checkbox.checked = checklistDiario[key];
+                    const item = checkbox.closest('.checklist-item');
+                    if (item) {
+                        item.classList.toggle('checked', checklistDiario[key]);
+                    }
+                }
+            });
+        }
+        
+        function salvarChecklistDiario() {
+            // Re-leitura dos checkboxes para garantir que o estado atual seja salvo
+            Object.keys(checklistDiario).forEach(key => {
+                const id = `check-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+                const checkbox = document.getElementById(id);
+                if (checkbox) {
+                    checklistDiario[key] = checkbox.checked;
+                }
+            });
+
+            salvarDados();
+            alert('Checklist Diário salvo!');
+        }
+        
+        // Renderiza a aba de checklist por paciente
+        function renderizarChecklistsPacientes() {
+            const container = document.getElementById('checklist-pacientes-container');
+            container.innerHTML = '';
+
+            leitos.forEach(leito => {
+                if (leito.paciente) {
+                    const paciente = leito.paciente;
+                    
+                    // Inicializa o checklist com a nova estrutura, se necessário
+                    CHECKLIST_ITEMS.forEach(item => {
+                        if (typeof paciente.checklist[item.key] === 'undefined') {
+                            paciente.checklist[item.key] = false;
+                        }
+                    });
+
+                    let checklistHtml = `<div class="card" id="checklist-card-${leito.id}">
+                        <div class="card-header">
+                            <div class="card-title">Leito ${leito.id} - ${paciente.nome}</div>
+                            <button class="btn btn-success salvar-checklist-paciente" data-leito="${leito.id}">Salvar Checklist</button>
+                        </div>
+                        <div class="checklist-grid">`;
+                        
+                        let currentSection = '';
+
+                        CHECKLIST_ITEMS.forEach(item => {
+                            if (item.section !== currentSection) {
+                                // Fecha a seção anterior, se houver
+                                if (currentSection !== '') {
+                                    checklistHtml += `</div>`; 
+                                }
+                                checklistHtml += `<div class="checklist-section"><h3>${item.section}</h3>`;
+                                currentSection = item.section;
+                            }
+                            
+                            const isChecked = paciente.checklist[item.key] || false;
+                            const checkedClass = isChecked ? 'checked' : '';
+
+                            checklistHtml += `
+                                <div class="checklist-item ${checkedClass}">
+                                    <input type="checkbox" id="check-p-${leito.id}-${item.key}" data-key="${item.key}" ${isChecked ? 'checked' : ''}>
+                                    <label for="check-p-${leito.id}-${item.key}">${item.label}</label>
+                                </div>
+                            `;
+                        });
+
+                    checklistHtml += `</div></div></div>`; // Fecha a última seção, o checklist-grid e o card
+                    container.innerHTML += checklistHtml;
+                }
+            });
+
+            // Adiciona listeners para os botões de salvar
+            document.querySelectorAll('.salvar-checklist-paciente').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    salvarChecklistPaciente(parseInt(this.getAttribute('data-leito')));
+                });
+            });
+
+            // Adiciona listeners para atualizar o estilo do item ao clicar no checkbox
+            document.querySelectorAll('#checklist-pacientes-container input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    this.closest('.checklist-item').classList.toggle('checked', this.checked);
+                });
+            });
+        }
+        
+        function salvarChecklistPaciente(leitoId) {
+            const leito = leitos.find(l => l.id === leitoId);
+
+            if (leito && leito.paciente) {
+                CHECKLIST_ITEMS.forEach(item => {
+                    const checkbox = document.getElementById(`check-p-${leitoId}-${item.key}`);
+                    if (checkbox) {
+                        leito.paciente.checklist[item.key] = checkbox.checked;
+                    }
+                });
+                salvarDados();
+                alert(`Checklist do Leito ${leitoId} salvo!`);
+            }
+        }
+        
+        // --- Funções de Visualização e Comentários ---
+        
+        function abrirModalVisualizarPaciente(leitoId) {
+            const leito = leitos.find(l => l.id === leitoId);
+            if (!leito || !leito.paciente) return;
+
+            const paciente = leito.paciente;
+            document.getElementById('visualizar-paciente-modal-title').textContent = `Detalhes do Paciente - Leito ${leitoId}`;
+            
+            let detalhesHtml = `
+                <p><strong>Nome:</strong> ${paciente.nome}</p>
+                <p><strong>Diagnóstico:</strong> ${paciente.diagnostico}</p>
+                <p><strong>LPP:</strong> ${paciente.temLpp ? paciente.especificacaoLpp : 'NÃO'}</p>
+                <hr>
+                
+                <h3>Dispositivos Instalados</h3>
+                <ul class="custom-device-list">
+            `;
+            
+            getDispositivosPadrao().forEach(dev => {
+                const devData = paciente.dispositivos[dev];
+                if (devData && devData.presente && devData.dataInsercao) {
+                    const { status, badge, diferenca } = getStatusDispositivo(dev, devData.dataInsercao);
+                    detalhesHtml += `
+                        <li>
+                            <span><strong>${dev}</strong> (Inserção: ${formatarData(devData.dataInsercao, dev === 'CVP')})</span>
+                            <span class="badge ${badge}">${status} (${diferenca})</span>
+                        </li>
+                    `;
+                }
+            });
+            
+            detalhesHtml += `</ul>`;
+            
+            document.getElementById('paciente-detalhes').innerHTML = detalhesHtml;
+            
+            document.getElementById('adicionar-comentario-btn').onclick = () => adicionarComentario(leitoId);
+            
+            renderizarComentarios(leitoId);
+            abrirModal('visualizar-paciente-modal');
+        }
+        
+        function adicionarComentario(leitoId) {
+            const leito = leitos.find(l => l.id === leitoId);
+            const comentarioTextarea = document.getElementById('novo-comentario');
+            const novoComentario = comentarioTextarea.value.trim();
+
+            if (novoComentario && leito && leito.paciente) {
+                const dataHora = new Date().toISOString();
+                leito.paciente.comentarios.push({
+                    data: dataHora,
+                    texto: novoComentario
+                });
+                comentarioTextarea.value = '';
+                salvarDados();
+                renderizarComentarios(leitoId);
+            }
+        }
+
+        function renderizarComentarios(leitoId) {
+            const leito = leitos.find(l => l.id === leitoId);
+            const commentList = document.getElementById('comment-list');
+            commentList.innerHTML = '';
+
+            if (leito && leito.paciente && leito.paciente.comentarios.length > 0) {
+                leito.paciente.comentarios.sort((a, b) => new Date(b.data) - new Date(a.data)); // Mais recente primeiro
+                leito.paciente.comentarios.forEach(comentario => {
+                    commentList.innerHTML += `
+                        <div class="comment-item">
+                            ${comentario.texto}
+                            <span class="comment-date">${formatarData(comentario.data, true)}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                commentList.innerHTML = '<p style="font-style: italic; color: #777;">Nenhum comentário adicionado ainda.</p>';
+            }
+        }
+
+        // --- Funções do Relatório (Round) - REFORMULADO PARA SER MAIS FORMAL ---
+        
+        function gerarRelatorio() {
+            const relatorioModal = document.getElementById('relatorio-modal');
+            const relatorioConteudo = document.getElementById('relatorio-conteudo');
+            
+            // 1. Cabeçalho Formal
+            let relatorioHtml = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2>RELATÓRIO DE PLANTÃO/ROUND DA UNIDADE DE TERAPIA INTENSIVA (UTI)</h2>
+                    <p style="font-weight: 500; font-size: 1.1rem; margin-top: 5px;">Período de Referência: ${document.getElementById('current-date').textContent}</p>
+                </div>
+                
+                <hr style="margin-bottom: 30px; border: 0; border-top: 2px solid #333;">
+            `;
+
+            // 2. Seção I: Sumário de Risco (Tabela de Dispositivos de Prazo)
+            relatorioHtml += `
+                <div class="report-section">
+                    <h3>Seção I: Sumário de Auditoria de Prazo de Dispositivos Invasivos</h3>
+                    <p style="margin-bottom: 15px;">A tabela a seguir apresenta os dispositivos invasivos com prazo de controle de troca ou manutenção (CVC, CVP, SVD, CHD), com foco em itens próximos ou já vencidos, sinalizando um risco potencial de infecção e a necessidade de intervenção imediata.</p>
+                    <table class="dispositivos-table">
+                        <thead>
+                            <tr>
+                                <th>Leito</th>
+                                <th>Paciente</th>
+                                <th>Dispositivo</th>
+                                <th>Data de Inserção</th>
+                                <th>Status de Prazo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="relatorio-dispositivos-tbody-content">
+                            </tbody>
+                    </table>
+                </div>
+            `;
+
+            // 3. Seção II: Auditoria Diária de Unidade
+            relatorioHtml += `
+                <div class="report-section">
+                    <h3>Seção II: Auditoria de Unidade e Recursos Gerais</h3>
+                    <p>Verificação das rotinas gerais e estado dos recursos de apoio à assistência:</p>
+                    <ul style="list-style-type: disc; padding-left: 30px; margin-top: 10px;">
+                        <li>Check Carrinho de Parada 1: <span style="font-weight: 600; color: ${checklistDiario.carrinho1 ? '#2ecc71' : '#e74c3c'};">${checklistDiario.carrinho1 ? 'Verificado' : 'PENDENTE'}</span></li>
+                        <li>Check Carrinho de Parada 2: <span style="font-weight: 600; color: ${checklistDiario.carrinho2 ? '#2ecc71' : '#e74c3c'};">${checklistDiario.carrinho2 ? 'Verificado' : 'PENDENTE'}</span></li>
+                        <li>Livro de Ocorrências: <span style="font-weight: 600; color: ${checklistDiario.livroOcorrencias ? '#2ecc71' : '#e74c3c'};">${checklistDiario.livroOcorrencias ? 'Iniciado' : 'PENDENTE'}</span></li>
+                        <li>Controle de Psicotrópicos: <span style="font-weight: 600; color: ${checklistDiario.psicotropicos ? '#2ecc71' : '#e74c3c'};">${checklistDiario.psicotropicos ? 'Checado' : 'PENDENTE'}</span></li>
+                        <li>Temperatura de Geladeira (8h/18h): <span style="font-weight: 600; color: ${checklistDiario.geladeira8h && checklistDiario.geladeira18h ? '#2ecc71' : '#e74c3c'};">${(checklistDiario.geladeira8h ? '8h OK' : '8h Pend.')} / ${(checklistDiario.geladeira18h ? '18h OK' : '18h Pend.')}</span></li>
+                        <li>Pedido à Farmácia: <span style="font-weight: 600; color: ${checklistDiario.pedidoFarmacia ? '#2ecc71' : '#e74c3c'};">${checklistDiario.pedidoFarmacia ? 'Realizado' : 'PENDENTE'}</span></li>
+                    </ul>
+                </div>
+            `;
+            
+            // 4. Seção III: Round e Análise Individualizada por Paciente
+            relatorioHtml += `<div class="report-section"><h3>Seção III: Round e Análise Individualizada por Paciente</h3>`;
+            
+            leitos.forEach(leito => {
+                if (leito.paciente) {
+                    const paciente = leito.paciente;
+                    let pacienteNarrative = '';
+
+                    // Paciente Header
+                    pacienteNarrative += `<h4 class="report-patient-title">Leito ${leito.id} - ${paciente.nome}${leito.tipo === 'isolamento' ? ' (ISOLAMENTO DE CONTATO)' : ''}</h4>`;
+                    pacienteNarrative += `<p style="font-style: italic;">Diagnóstico Principal: ${paciente.diagnostico}</p>`;
+                    
+                    // Checklist Status (Cuidados de Enfermagem)
+                    pacienteNarrative += `<p style="font-weight: 600; margin-top: 15px;">Checklist de Cuidados Essenciais de Enfermagem (Plantão):</p>`;
+                    pacienteNarrative += `<ul style="list-style-type: none; padding-left: 15px; margin-bottom: 15px;">`;
+                    CHECKLIST_ITEMS.forEach(item => {
+                        const isDone = paciente.checklist[item.key] || false;
+                        pacienteNarrative += `<li>- ${item.label}: <span style="font-weight: 600; color: ${isDone ? '#2ecc71' : '#e74c3c'};">${isDone ? 'Concluído' : 'Pendente'}</span></li>`;
+                    });
+                    pacienteNarrative += `</ul>`;
+
+                    // Dispositivos (Narrativa Detalhada)
+                    const installedDevices = getDispositivosPadrao().filter(dev => paciente.dispositivos[dev] && paciente.dispositivos[dev].presente);
+                    
+                    if (installedDevices.length > 0) {
+                        pacienteNarrative += `<p style="font-weight: 600;">Dispositivos Instalados e Controle de Datas:</p>`;
+                        pacienteNarrative += `<ul style="list-style-type: disc; padding-left: 30px; font-size: 0.95rem;">`;
+                        installedDevices.forEach(dev => {
+                            const devData = paciente.dispositivos[dev];
+                            const { status, diferenca } = getStatusDispositivo(dev, devData.dataInsercao);
+                            let deviceDetail = `<li><span style="font-weight: 600;">${dev}</span>: Inserido em ${formatarData(devData.dataInsercao, dev === 'CVP')}. Status de Prazo: ${status} (${diferenca} desde a inserção).</li>`;
+                            pacienteNarrative += deviceDetail;
+                        });
+                        pacienteNarrative += `</ul>`;
+                    } else {
+                        pacienteNarrative += `<p>Dispositivos Instalados: Nenhum dispositivo invasivo rastreado.</p>`;
+                    }
+
+                    // LPP Status
+                    if (paciente.temLpp) {
+                        pacienteNarrative += `<p style="margin-top: 10px; font-weight: 600; color: #e74c3c;">** Atenção - Lesão por Pressão (LPP): SIM. Especificação: ${paciente.especificacaoLpp} **</p>`;
+                    } else {
+                        pacienteNarrative += `<p style="margin-top: 10px;">Lesão por Pressão (LPP): Não.</p>`;
+                    }
+                    
+                    // Comentários (Ocorrências do Plantão)
+                    if (paciente.comentarios && paciente.comentarios.length > 0) {
+                        const latestComment = paciente.comentarios[paciente.comentarios.length - 1]; 
+                        pacienteNarrative += `<p style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-weight: 600;">Ocorrência/Comentário Principal do Plantão:</p>`;
+                        pacienteNarrative += `<p style="margin-top: 5px; font-size: 0.95rem; border-left: 3px solid #3498db; padding-left: 5px; background-color: #f0f8ff;">${latestComment.texto} <span style="font-size: 0.8rem; color: #777; display: block;">(Registrado em: ${formatarData(latestComment.data, true)})</span></p>`;
+                    } else {
+                        pacienteNarrative += `<p style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">Não há ocorrências registradas para o plantão atual.</p>`;
+                    }
+
+                    pacienteNarrative += `<hr style="margin: 30px 0; border: 0; border-top: 1px solid #ddd;">`;
+                    relatorioHtml += pacienteNarrative;
+                }
+            });
+
+            relatorioHtml += `</div>`; // Fecha o container de Round
+
+            relatorioConteudo.innerHTML = relatorioHtml;
+            atualizarTabelaDispositivos(true); // Preenche a tabela de dispositivos de prazo no relatório
+            
+            abrirModal('relatorio-modal');
+        }
+        
+        // --- Funções de Importação/Exportação ---
+        
+        function exportarDados() {
+            const data = {
+                leitos: leitos,
+                checklistDiario: checklistDiario,
+                dispositivosCustom: DISPOSITIVOS_CUSTOM
+            };
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dados_uti_${new Date().toISOString().substring(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importarDados() {
+            const fileInput = document.getElementById('importar-dados-input');
+            fileInput.click(); 
+
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        
+                        if (importedData.leitos && importedData.checklistDiario) {
+                            if (confirm("Atenção: A importação irá substituir todos os dados atuais. Deseja continuar?")) {
+                                // Aplicar dados importados
+                                localStorage.setItem('leitosUTI', JSON.stringify(importedData.leitos));
+                                localStorage.setItem('checklistDiarioUTI', JSON.stringify(importedData.checklistDiario));
+                                if (importedData.dispositivosCustom) {
+                                    localStorage.setItem('dispositivosCustomUTI', JSON.stringify(importedData.dispositivosCustom));
+                                }
+                                
+                                // Recarregar e renderizar
+                                carregarDados();
+                                renderizarLeitos();
+                                renderizarChecklistsPacientes();
+                                alert('Dados importados com sucesso! O sistema foi recarregado.');
+                            }
+                        } else {
+                            alert('Erro: O arquivo JSON não possui a estrutura de dados esperada.');
+                        }
+                    } catch (error) {
+                        console.error("Erro ao importar dados:", error);
+                        alert('Erro ao processar o arquivo. Certifique-se de que é um JSON válido.');
+                    }
+                    fileInput.value = ''; // Reseta o input para permitir nova importação
+                };
+                reader.readAsText(file);
+            };
+        }
+
+        // --- Inicialização ---
+
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarDados();
+            renderizarLeitos();
+            renderizarChecklistsPacientes();
+            atualizarData();
+            setupTabListeners(); // NOVO: Inicializa o controle das abas
+
+            // Event listener para o formulário de paciente
+            document.getElementById('paciente-form').addEventListener('submit', salvarPaciente);
+            
+            // Event listener para o checkbox LPP
+            document.getElementById('tem-lpp').addEventListener('change', function() {
+                document.getElementById('especificacao-lpp').style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // Event listener para fechar os modais
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    const modalId = this.getAttribute('data-modal');
+                    fecharModal(modalId);
+                });
+            });
+            
+            // Event listener para salvar checklist diário
+            document.getElementById('salvar-checklist-diario').addEventListener('click', salvarChecklistDiario);
+            
+            // Event listener para gerar relatório
+            document.getElementById('gerar-relatorio-btn').addEventListener('click', gerarRelatorio);
+            
+            // Event listeners para importação/exportação
+            document.getElementById('exportar-dados-btn').addEventListener('click', exportarDados);
+            document.getElementById('importar-dados-btn').addEventListener('click', importarDados);
+            
+            // Fechar modal ao clicar fora dele
+            window.addEventListener('click', function(event) {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    if (event.target === modal) {
+                        fecharModal(modal.id);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
